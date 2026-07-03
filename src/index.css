@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans bg-background text-text-primary antialiased;
+  }
+}
+
+@layer utilities {
+  .mobile-container {
+    @apply max-w-[390px] mx-auto min-h-screen relative bg-background;
+  }
+  .content-padding {
+    @apply px-4;
+  }
+  .content-pb {
+    @apply pb-24;
+  }
+}
