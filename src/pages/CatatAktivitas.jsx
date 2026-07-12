@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Info } from 'lucide-react';
 import { getSiswa, getBuku, addAktivitas, generateId } from '../services/dummyData';
@@ -6,9 +6,16 @@ import { Input, Button } from '../components';
 
 export default function CatatAktivitas() {
   const navigate = useNavigate();
-  const siswaList = getSiswa().filter(s => s.statusAktif);
-  const bukuList = getBuku();
+  const [siswaList, setSiswaList] = useState([]);
+  const [bukuList, setBukuList] = useState([]);
   const today = new Date().toISOString().split('T')[0];
+
+  useEffect(() => {
+    Promise.all([getSiswa(), getBuku()]).then(([siswa, buku]) => {
+      setSiswaList(siswa.filter(s => s.statusAktif));
+      setBukuList(buku);
+    });
+  }, []);
 
   const [form, setForm] = useState({
     idSiswa: '', idBuku: '', tanggal: today, durasiBaca: '', status: 'Masih Baca', catatan: '',
@@ -29,14 +36,14 @@ export default function CatatAktivitas() {
     return errs;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSuccess(false);
     const errs = validate();
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
-    addAktivitas({
+    await addAktivitas({
       idAktivitas: generateId('A'),
       idSiswa: form.idSiswa,
       idBuku: form.idBuku,

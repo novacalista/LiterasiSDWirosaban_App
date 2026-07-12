@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Users, Clock, Plus, Book, Megaphone, TrendingUp } from 'lucide-react';
 import { getSiswa, getBuku, getAktivitas } from '../services/dummyData';
@@ -31,9 +32,17 @@ function getBukuMap(bukuList) {
 
 export default function Beranda() {
   const navigate = useNavigate();
-  const siswaList = getSiswa().filter(s => s.statusAktif);
-  const bukuList = getBuku();
-  const aktivitas = getAktivitas();
+  const [siswaList, setSiswaList] = useState([]);
+  const [bukuList, setBukuList] = useState([]);
+  const [aktivitas, setAktivitas] = useState([]);
+
+  useEffect(() => {
+    Promise.all([getSiswa(), getBuku(), getAktivitas()]).then(([siswa, buku, aktiv]) => {
+      setSiswaList(siswa.filter(s => s.statusAktif));
+      setBukuList(buku);
+      setAktivitas(aktiv);
+    });
+  }, []);
 
   const activeSiswa = siswaList.length;
   const weeklyActivities = getWeeklyActivities(aktivitas);
@@ -71,7 +80,7 @@ export default function Beranda() {
             <p className="text-[11px] text-white/80 leading-4">Catat kegiatan membaca siswa</p>
           </button>
           <button
-            onClick={() => navigate('/siswa')}
+            onClick={() => navigate('/siswa', { state: { openAdd: true } })}
             className="bg-secondary text-white rounded-lg p-4 text-left shadow-soft hover:bg-secondary-dark transition-colors"
           >
             <Plus size={20} className="mb-2" />

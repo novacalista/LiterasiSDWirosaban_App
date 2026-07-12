@@ -1,3 +1,11 @@
+import { isSupabaseConfigured } from './supabaseClient';
+import {
+  supabaseGetSiswa, supabaseAddSiswa, supabaseUpdateSiswa, supabaseSaveSiswa as supabaseSaveAllSiswa,
+  supabaseGetBuku, supabaseAddBuku, supabaseUpdateBuku, supabaseSaveBuku as supabaseSaveAllBuku,
+  supabaseGetAktivitas, supabaseAddAktivitas, supabaseSaveAktivitas as supabaseSaveAllAktivitas,
+  supabaseSeedData,
+} from './supabaseService';
+
 const STORAGE_KEYS = {
   SISWA: 'literasi_siswa',
   BUKU: 'literasi_buku',
@@ -39,7 +47,9 @@ const dummyAktivitas = [
   { idAktivitas: 'A008', idSiswa: 'S007', idBuku: 'B008', tanggal: '2026-07-01', durasiBaca: 30, status: 'Masih Baca', catatan: 'Baru mulai' },
 ];
 
-function getData(key) {
+// --- localStorage fallback ---
+
+function localStorageGetData(key) {
   try {
     const raw = localStorage.getItem(key);
     if (raw) return JSON.parse(raw);
@@ -47,56 +57,246 @@ function getData(key) {
   return null;
 }
 
-function setData(key, data) {
+function localStorageSetData(key, data) {
   localStorage.setItem(key, JSON.stringify(data));
 }
 
-export function initDummyData() {
+function localStorageGetSiswa() {
+  return localStorageGetData(STORAGE_KEYS.SISWA) || [];
+}
+
+function localStorageSaveSiswa(siswaList) {
+  localStorageSetData(STORAGE_KEYS.SISWA, siswaList);
+}
+
+function localStorageGetBuku() {
+  return localStorageGetData(STORAGE_KEYS.BUKU) || [];
+}
+
+function localStorageSaveBuku(bukuList) {
+  localStorageSetData(STORAGE_KEYS.BUKU, bukuList);
+}
+
+function localStorageGetAktivitas() {
+  return localStorageGetData(STORAGE_KEYS.AKTIVITAS) || [];
+}
+
+function localStorageSaveAktivitas(aktivitasList) {
+  localStorageSetData(STORAGE_KEYS.AKTIVITAS, aktivitasList);
+}
+
+function localStorageInitDummyData() {
   if (!localStorage.getItem(STORAGE_KEYS.SISWA)) {
-    setData(STORAGE_KEYS.SISWA, dummySiswa);
+    localStorageSetData(STORAGE_KEYS.SISWA, dummySiswa);
   }
   if (!localStorage.getItem(STORAGE_KEYS.BUKU)) {
-    setData(STORAGE_KEYS.BUKU, dummyBuku);
+    localStorageSetData(STORAGE_KEYS.BUKU, dummyBuku);
   }
   if (!localStorage.getItem(STORAGE_KEYS.AKTIVITAS)) {
-    setData(STORAGE_KEYS.AKTIVITAS, dummyAktivitas);
+    localStorageSetData(STORAGE_KEYS.AKTIVITAS, dummyAktivitas);
   }
 }
 
-export function getSiswa() {
-  return getData(STORAGE_KEYS.SISWA) || [];
+// --- Exported async functions (Supabase first, localStorage fallback) ---
+
+export async function initDummyData() {
+  localStorageInitDummyData();
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseSeedData(dummySiswa, dummyBuku, dummyAktivitas);
+    } catch (err) {
+      console.error('Supabase seed data error:', {
+        message: err.message,
+        details: err.details,
+        hint: err.hint,
+        code: err.code,
+      });
+    }
+  }
 }
 
-export function saveSiswa(siswaList) {
-  setData(STORAGE_KEYS.SISWA, siswaList);
+export async function getSiswa() {
+  if (isSupabaseConfigured()) {
+    try {
+      return await supabaseGetSiswa();
+    } catch (_) {}
+  }
+  return localStorageGetSiswa();
 }
 
-export function getBuku() {
-  return getData(STORAGE_KEYS.BUKU) || [];
+export async function saveSiswa(siswaList) {
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseSaveAllSiswa(siswaList);
+      localStorageSaveSiswa(siswaList);
+      return true;
+    } catch (err) {
+      console.error('Gagal menyimpan ke Supabase:', err);
+      localStorageSaveSiswa(siswaList);
+      return false;
+    }
+  }
+  localStorageSaveSiswa(siswaList);
+  return true;
 }
 
-export function saveBuku(bukuList) {
-  setData(STORAGE_KEYS.BUKU, bukuList);
+export async function addSiswa(newSiswa) {
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseAddSiswa(newSiswa);
+      localStorageSaveSiswa([...localStorageGetSiswa(), newSiswa]);
+      return true;
+    } catch (err) {
+      console.error('Supabase insert student error:', {
+        message: err.message,
+        details: err.details,
+        hint: err.hint,
+        code: err.code,
+      });
+      console.log('Insert payload:', newSiswa);
+      localStorageSaveSiswa([...localStorageGetSiswa(), newSiswa]);
+      return false;
+    }
+  }
+  localStorageSaveSiswa([...localStorageGetSiswa(), newSiswa]);
+  return true;
 }
 
-export function getAktivitas() {
-  return getData(STORAGE_KEYS.AKTIVITAS) || [];
+export async function updateSiswa(updatedSiswa) {
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseUpdateSiswa(updatedSiswa);
+      const list = localStorageGetSiswa();
+      localStorageSaveSiswa(list.map(s => s.idSiswa === updatedSiswa.idSiswa ? updatedSiswa : s));
+      return true;
+    } catch (err) {
+      console.error('Supabase update student error:', {
+        message: err.message,
+        details: err.details,
+        hint: err.hint,
+        code: err.code,
+      });
+      const list = localStorageGetSiswa();
+      localStorageSaveSiswa(list.map(s => s.idSiswa === updatedSiswa.idSiswa ? updatedSiswa : s));
+      return false;
+    }
+  }
+  const list = localStorageGetSiswa();
+  localStorageSaveSiswa(list.map(s => s.idSiswa === updatedSiswa.idSiswa ? updatedSiswa : s));
+  return true;
 }
 
-export function saveAktivitas(aktivitasList) {
-  setData(STORAGE_KEYS.AKTIVITAS, aktivitasList);
+export async function getBuku() {
+  if (isSupabaseConfigured()) {
+    try {
+      const data = await supabaseGetBuku();
+      if (data.length > 0) {
+        console.log('Books from Supabase, sample coverUrl:', data[0].coverUrl);
+      }
+      return data;
+    } catch (err) {
+      console.error('Supabase fetch buku error:', {
+        message: err.message,
+        details: err.details,
+        hint: err.hint,
+        code: err.code,
+      });
+    }
+  }
+  const local = localStorageGetBuku();
+  if (local.length > 0) {
+    console.log('Books from localStorage, sample coverUrl:', local[0].coverUrl);
+  }
+  return local;
 }
 
-export function addAktivitas(aktivitas) {
-  const list = getAktivitas();
+export async function saveBuku(bukuList) {
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseSaveAllBuku(bukuList);
+      localStorageSaveBuku(bukuList);
+      return true;
+    } catch (err) {
+      console.error('Supabase save buku error:', {
+        message: err.message,
+        details: err.details,
+        hint: err.hint,
+        code: err.code,
+      });
+      localStorageSaveBuku(bukuList);
+      return false;
+    }
+  }
+  localStorageSaveBuku(bukuList);
+  return true;
+}
+
+export async function addBuku(newBuku) {
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseAddBuku(newBuku);
+      localStorageSaveBuku([...localStorageGetBuku(), newBuku]);
+      return true;
+    } catch (err) {
+      console.error('Supabase insert buku error:', {
+        message: err.message,
+        details: err.details,
+        hint: err.hint,
+        code: err.code,
+      });
+      console.log('Insert buku payload:', newBuku);
+      localStorageSaveBuku([...localStorageGetBuku(), newBuku]);
+      return false;
+    }
+  }
+  localStorageSaveBuku([...localStorageGetBuku(), newBuku]);
+  return true;
+}
+
+export async function updateBuku(updatedBuku) {
+  const list = localStorageGetBuku();
+  localStorageSaveBuku(list.map(b => b.idBuku === updatedBuku.idBuku ? updatedBuku : b));
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseUpdateBuku(updatedBuku);
+    } catch (_) {}
+  }
+}
+
+export async function getAktivitas() {
+  if (isSupabaseConfigured()) {
+    try {
+      return await supabaseGetAktivitas();
+    } catch (_) {}
+  }
+  return localStorageGetAktivitas();
+}
+
+export async function addAktivitas(aktivitas) {
+  const list = localStorageGetAktivitas();
   list.unshift(aktivitas);
-  saveAktivitas(list);
+  localStorageSaveAktivitas(list);
 
-  const bukuList = getBuku();
+  const bukuList = localStorageGetBuku();
   const idx = bukuList.findIndex(b => b.idBuku === aktivitas.idBuku);
   if (idx !== -1) {
     bukuList[idx].jumlahDibaca = (bukuList[idx].jumlahDibaca || 0) + 1;
-    saveBuku(bukuList);
+    localStorageSaveBuku(bukuList);
+  }
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseAddAktivitas(aktivitas);
+    } catch (_) {}
+  }
+}
+
+export async function saveAktivitas(aktivitasList) {
+  localStorageSaveAktivitas(aktivitasList);
+  if (isSupabaseConfigured()) {
+    try {
+      await supabaseSaveAllAktivitas(aktivitasList);
+    } catch (_) {}
   }
 }
 

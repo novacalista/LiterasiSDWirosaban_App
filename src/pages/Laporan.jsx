@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Printer, BookOpen, Clock, Users, Book, TrendingUp } from 'lucide-react';
 import { getAktivitas, getSiswa, getBuku } from '../services/dummyData';
 import { ReportCard, Button } from '../components';
@@ -36,9 +36,17 @@ function getKoleksiTerbacaCount(aktivitas) {
 
 export default function Laporan() {
   const [printError, setPrintError] = useState('');
-  const aktivitas = getAktivitas();
-  const siswaList = getSiswa();
-  const bukuList = getBuku();
+  const [aktivitas, setAktivitas] = useState([]);
+  const [siswaList, setSiswaList] = useState([]);
+  const [bukuList, setBukuList] = useState([]);
+
+  useEffect(() => {
+    Promise.all([getAktivitas(), getSiswa(), getBuku()]).then(([aktiv, siswa, buku]) => {
+      setAktivitas(aktiv);
+      setSiswaList(siswa);
+      setBukuList(buku);
+    });
+  }, []);
 
   const handlePrint = () => {
     setPrintError('');

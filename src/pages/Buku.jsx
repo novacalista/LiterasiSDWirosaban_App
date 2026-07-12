@@ -1,19 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, BookOpen, TrendingUp, Plus, X, Check } from 'lucide-react';
-import { getBuku, saveBuku, generateId } from '../services/dummyData';
+import { getBuku, addBuku, generateId } from '../services/dummyData';
+import { isSupabaseConfigured } from '../services/supabaseClient';
 import { Input, Button, BookCard, Badge } from '../components';
 
-const categories = ['Semua', 'Fiksi', 'Sains', 'Sejarah'];
-const bookCategoryOptions = ['Fiksi', 'Sains', 'Sejarah'];
+const categories = ['Semua', 'Fiksi', 'Sains', 'Sejarah', 'Umum'];
+const bookCategoryOptions = ['Fiksi', 'Sains', 'Sejarah', 'Umum'];
 
 export default function Buku() {
-  const [bukuList, setBukuList] = useState(getBuku);
+  const [bukuList, setBukuList] = useState([]);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('Semua');
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ judulBuku: '', penulis: '', kategori: '' });
+  const [form, setForm] = useState({ judulBuku: '', penulis: '', kategori: '', catatan: '' });
   const [errors, setErrors] = useState({});
   const [successMsg, setSuccessMsg] = useState('');
+
+  useEffect(() => {
+    getBuku().then(setBukuList);
+  }, []);
 
   const sortedByRead = [...bukuList].sort((a, b) => b.jumlahDibaca - a.jumlahDibaca);
   const topBooks = sortedByRead.slice(0, 3);
@@ -26,7 +31,7 @@ export default function Buku() {
   });
 
   const resetForm = () => {
-    setForm({ judulBuku: '', penulis: '', kategori: '' });
+    setForm({ judulBuku: '', penulis: '', kategori: '', catatan: '' });
     setErrors({});
   };
 
@@ -38,7 +43,7 @@ export default function Buku() {
     return errs;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
     setErrors(errs);
@@ -51,13 +56,18 @@ export default function Buku() {
       kategori: form.kategori,
       coverUrl: '',
       jumlahDibaca: 0,
+      catatan: form.catatan.trim(),
     };
 
-    const updated = [...bukuList, newBuku];
-    saveBuku(updated);
-    setBukuList(updated);
+    const supabaseOk = await addBuku(newBuku);
+    const freshData = await getBuku();
+    setBukuList(freshData);
     setShowForm(false);
-    setSuccessMsg('Data buku berhasil ditambahkan');
+    if (isSupabaseConfigured() && !supabaseOk) {
+      setSuccessMsg('Gagal menyimpan ke Supabase. Data disimpan sementara di localStorage.');
+    } else {
+      setSuccessMsg('Data buku berhasil ditambahkan');
+    }
     setTimeout(() => setSuccessMsg(''), 3000);
     resetForm();
   };
@@ -146,7 +156,7 @@ export default function Buku() {
 
       <button
         onClick={() => { resetForm(); setShowForm(true); }}
-        className="fixed bottom-20 right-4 w-12 h-12 bg-primary rounded-full shadow-floating flex items-center justify-center text-white hover:bg-primary-dark transition-colors z-40"
+        className="absolute bottom-20 right-4 w-12 h-12 bg-primary rounded-full shadow-floating flex items-center justify-center text-white hover:bg-primary-dark transition-colors z-40"
         aria-label="Tambah Buku"
       >
         <Plus size={22} />
@@ -176,6 +186,15 @@ export default function Buku() {
                   ))}
                 </select>
                 {errors.kategori && <p className="text-[11px] text-danger mt-1">{errors.kategori}</p>}
+              </div>
+              <div>
+                <textarea
+                  placeholder="Catatan / Deskripsi (opsional)"
+                  value={form.catatan}
+                  onChange={(e) => setForm({...form, catatan: e.target.value})}
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-md border text-sm outline-none border-border bg-surface text-text-primary focus:border-primary focus:ring-[3px] focus:ring-primary/12 resize-none"
+                />
               </div>
               <Button variant="positive" fullWidth type="submit">
                 <Check size={16} className="inline mr-1" /> Simpan

@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Search, Plus, X, Check } from 'lucide-react';
-import { getSiswa, saveSiswa, generateId } from '../services/dummyData';
+import { getSiswa, addSiswa, updateSiswa, generateId } from '../services/dummyData';
+import { isSupabaseConfigured } from '../services/supabaseClient';
 import { Input, Button, StudentCard } from '../components';
 
 export default function Siswa() {
-  const [siswaList, setSiswaList] = useState(getSiswa);
+  const location = useLocation();
+  const [siswaList, setSiswaList] = useState([]);
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editData, setEditData] = useState(null);
@@ -12,6 +15,11 @@ export default function Siswa() {
   const [form, setForm] = useState({ namaSiswa: '', nis: '', kelas: '', alamat: '' });
   const [errors, setErrors] = useState({});
   const [successMsg, setSuccessMsg] = useState('');
+  const hasOpened = useRef(false);
+
+  useEffect(() => {
+    getSiswa().then(setSiswaList);
+  }, []);
 
   const filtered = siswaList.filter(s =>
     s.namaSiswa.toLowerCase().includes(search.toLowerCase()) ||
@@ -25,6 +33,14 @@ export default function Siswa() {
   };
 
   const openAdd = () => { resetForm(); setShowForm(true); };
+
+  useEffect(() => {
+    if (location.state?.openAdd && !hasOpened.current) {
+      hasOpened.current = true;
+      openAdd();
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state?.openAdd]);
 
   const openEdit = (s) => {
     setForm({ namaSiswa: s.namaSiswa, nis: s.nis, kelas: s.kelas, alamat: s.alamat || '' });
@@ -45,19 +61,22 @@ export default function Siswa() {
     return errs;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
-    let updated;
+    let supabaseOk = true;
     if (editData) {
-      updated = siswaList.map(s =>
-        s.idSiswa === editData.idSiswa
-          ? { ...s, namaSiswa: form.namaSiswa.trim(), nis: form.nis.trim(), kelas: form.kelas.trim(), alamat: form.alamat.trim() }
-          : s
-      );
+      const updatedSiswa = {
+        ...editData,
+        namaSiswa: form.namaSiswa.trim(),
+        nis: form.nis.trim(),
+        kelas: form.kelas.trim(),
+        alamat: form.alamat.trim(),
+      };
+      supabaseOk = await updateSiswa(updatedSiswa);
     } else {
       const newSiswa = {
         idSiswa: generateId('S'),
@@ -67,12 +86,17 @@ export default function Siswa() {
         alamat: form.alamat.trim(),
         statusAktif: true,
       };
-      updated = [...siswaList, newSiswa];
+      supabaseOk = await addSiswa(newSiswa);
     }
-    saveSiswa(updated);
-    setSiswaList(updated);
+
+    const freshData = await getSiswa();
+    setSiswaList(freshData);
     setShowForm(false);
-    setSuccessMsg(editData ? 'Data siswa berhasil diperbarui' : 'Data siswa berhasil ditambahkan');
+    if (isSupabaseConfigured() && !supabaseOk) {
+      setSuccessMsg('Gagal menyimpan ke Supabase. Data disimpan sementara di localStorage.');
+    } else {
+      setSuccessMsg(editData ? 'Data siswa berhasil diperbarui' : 'Data siswa berhasil ditambahkan');
+    }
     setTimeout(() => setSuccessMsg(''), 3000);
     resetForm();
   };
@@ -111,7 +135,7 @@ export default function Siswa() {
 
       <button
         onClick={openAdd}
-        className="fixed bottom-20 right-4 w-12 h-12 bg-primary rounded-full shadow-floating flex items-center justify-center text-white hover:bg-primary-dark transition-colors z-40"
+        className="absolute bottom-20 right-4 w-12 h-12 bg-primary rounded-full shadow-floating flex items-center justify-center text-white hover:bg-primary-dark transition-colors z-40"
         aria-label="Tambah Siswa"
       >
         <Plus size={22} />
