@@ -11,7 +11,8 @@ Frontend prototype for managing student literacy reading activities at SD Negeri
 | Tailwind CSS 3 | Styling and design system |
 | React Router DOM | Client-side routing |
 | lucide-react | Icon library |
-| localStorage | Data persistence |
+| Supabase | Primary database (PostgreSQL) |
+| localStorage | Fallback/prototype mode when Supabase is unavailable |
 
 ## Getting Started
 
@@ -21,6 +22,19 @@ npm run dev
 ```
 
 The app will be available at `http://localhost:5173`.
+
+## Supabase Configuration (Optional)
+
+For production mode, copy `.env.example` to `.env` and fill in your Supabase project credentials:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
+
+- With Supabase configured: students, books, and reading activities are stored in Supabase PostgreSQL tables.
+- Without Supabase: the app runs in prototype mode using localStorage as fallback.
+- Authentication remains localStorage-based (dummy session, no Supabase Auth).
 
 ## Dummy Login
 
@@ -76,17 +90,29 @@ The app will be available at `http://localhost:5173`.
 4. View "Buku Terfavorit" card
 5. Click "Cetak Laporan" to trigger browser print dialog
 
-## localStorage Reset
+## Reset Data
 
-To reset all data to the initial dummy state, open your browser's DevTools and run:
+### Supabase (Production)
+To reset main data (students, books, activities), run in your Supabase SQL editor:
+
+```sql
+DELETE FROM reading_activities;
+DELETE FROM books;
+DELETE FROM students;
+```
+
+Refresh the page to re-seed with initial dummy data.
+
+### localStorage (Prototype / Fallback)
+To reset fallback data when Supabase is not configured:
 
 ```javascript
 localStorage.clear();
 ```
 
-Then refresh the page. The app will re-initialize with fresh dummy data on next load.
+Then refresh the page.
 
-Alternatively:
+Alternatively, remove specific keys:
 
 ```javascript
 localStorage.removeItem('literasi_siswa');
