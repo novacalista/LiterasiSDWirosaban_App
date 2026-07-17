@@ -191,7 +191,7 @@ export async function getBuku() {
     try {
       const data = await supabaseGetBuku();
       if (data.length > 0) {
-        console.log('Books from Supabase, sample coverUrl:', data[0].coverUrl);
+        localStorageSaveBuku(data);
       }
       return data;
     } catch (err) {
@@ -203,11 +203,7 @@ export async function getBuku() {
       });
     }
   }
-  const local = localStorageGetBuku();
-  if (local.length > 0) {
-    console.log('Books from localStorage, sample coverUrl:', local[0].coverUrl);
-  }
-  return local;
+  return localStorageGetBuku();
 }
 
 export async function saveBuku(bukuList) {

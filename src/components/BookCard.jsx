@@ -10,14 +10,15 @@ const categoryColors = {
 
 export default function BookCard({ buku, compact = false }) {
   const [imgError, setImgError] = useState(false);
-  const showImage = buku.coverUrl && !imgError;
+  const coverUrl = (buku.coverUrl || '').trim();
+  const showImage = coverUrl && !imgError;
 
   const cover = (iconSize) =>
     showImage ? (
       <img
-        src={buku.coverUrl}
+        src={coverUrl}
         alt={buku.judulBuku}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover rounded-t-lg"
         onError={() => setImgError(true)}
       />
     ) : (

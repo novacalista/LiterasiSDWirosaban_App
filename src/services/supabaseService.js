@@ -91,9 +91,6 @@ export async function supabaseGetBuku() {
   const sb = getSupabase();
   const { data, error } = await sb.from('books').select('*').order('judul_buku');
   if (error) throw error;
-  if (data && data.length > 0) {
-    console.log('Supabase books raw sample:', { cover_url: data[0].cover_url, judul: data[0].judul_buku });
-  }
   return (data || []).map(mapRowToBuku);
 }
 
