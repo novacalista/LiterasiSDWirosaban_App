@@ -89,7 +89,9 @@ export async function supabaseUpdateSiswa(updatedSiswa) {
 
 export async function supabaseGetBuku() {
   const sb = getSupabase();
-  const { data, error } = await sb.from('books').select('*').order('judul_buku');
+  const { data, error } = await sb.from('books')
+    .select('id_buku, judul_buku, penulis, kategori, cover_url, jumlah_dibaca, catatan')
+    .order('judul_buku');
   if (error) throw error;
   return (data || []).map(mapRowToBuku);
 }

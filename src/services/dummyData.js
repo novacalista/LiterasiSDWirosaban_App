@@ -203,7 +203,8 @@ export async function getBuku() {
       });
     }
   }
-  return localStorageGetBuku();
+  const local = localStorageGetBuku();
+  return local;
 }
 
 export async function saveBuku(bukuList) {
