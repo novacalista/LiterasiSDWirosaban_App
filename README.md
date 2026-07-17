@@ -1,122 +1,89 @@
-# Sistem Informasi Literasi Membaca Siswa SDN Wirosaban
+# 📚 SILAS (Sistem Informasi Literasi Membaca Siswa SD Negeri Wirosaban)
 
-Frontend prototype for managing student literacy reading activities at SD Negeri Wirosaban library. Built as a mobile-first web application for demo purposes.
+## Deskripsi Singkat
 
-## Tech Stack
+SILAS (Sistem Informasi Literasi Membaca Siswa SD Negeri Wirosaban) merupakan aplikasi berbasis web yang dirancang untuk membantu petugas perpustakaan dalam mengelola kegiatan literasi membaca di SD Negeri Wirosaban. Sistem ini memudahkan pencatatan aktivitas membaca siswa, pengelolaan data siswa dan buku, pencarian data literasi, pemantauan buku yang paling sering dibaca, serta pembuatan laporan kegiatan literasi secara lebih cepat, rapi, dan terstruktur.
 
-| Technology | Purpose |
-|---|---|
-| React 19 | UI framework |
-| Vite | Build tool and dev server |
-| Tailwind CSS 3 | Styling and design system |
-| React Router DOM | Client-side routing |
-| lucide-react | Icon library |
-| Supabase | Primary database (PostgreSQL) |
-| localStorage | Fallback/prototype mode when Supabase is unavailable |
+---
 
-## Getting Started
+## 👥 Nama Anggota Tim
+
+1. Riza Anvatha Balqis — 2400016043
+2. Herisa Zaskia Larastati — 2400016014
+3. Zulfah Alfi Sanah — 2400016023
+4. Sri Hanifah — 2400016032
+5. Nova Syafa Calista — 2400016092
+
+---
+
+## 💼 Pembagian Peran Anggota
+
+| Nama | Peran | Tugas |
+|------|-------|-------|
+| **Riza Anvatha Balqis** | **Project Manager & Backend Developer** | Mengoordinasikan jalannya proyek, menyusun timeline, membagi tugas anggota, mengembangkan backend, mengintegrasikan fitur aplikasi, serta melakukan final checking sebelum aplikasi dipublikasikan. |
+| **Herisa Zaskia Larastati** | **UI/UX Designer** | Melakukan analisis kebutuhan pengguna, menyusun user flow, membuat wireframe, prototype, serta merancang tampilan antarmuka (UI) dan pengalaman pengguna (UX). |
+| **Zulfah Alfi Sanah** | **System Analyst & Documentation** | Menganalisis kebutuhan sistem, menyusun Software Requirements Specification (SRS), membuat use case diagram, activity diagram, flowchart, serta menyusun dokumentasi proyek. |
+| **Sri Hanifah** | **Frontend Developer** | Mengembangkan antarmuka aplikasi menggunakan React, membangun halaman dan komponen, mengatur navigasi, serta menghubungkan frontend dengan backend dan database. |
+| **Nova Syafa Calista** | **Database Developer & Quality Assurance (QA)** | Merancang struktur database menggunakan Supabase, mengelola penyimpanan data menggunakan Supabase dan Local Storage, melakukan pengujian aplikasi, memperbaiki bug, serta memastikan seluruh fitur berjalan sesuai kebutuhan. |
+
+---
+
+## 🛠️ Teknologi yang Digunakan
+
+- React.js
+- Vite
+- Tailwind CSS
+- JavaScript
+- React Router DOM
+- Supabase
+- Local Storage
+- Figma
+- Git
+- GitHub
+- Vercel
+
+---
+
+## ▶️ Cara Menjalankan Aplikasi
+
+### 1. Clone repository
+
+```bash
+git clone https://github.com/novacalista/LiterasiSDWirosaban_App.git
+```
+
+### 2. Masuk ke folder proyek
+
+```bash
+cd LiterasiSDWirosaban_App
+```
+
+### 3. Install dependency
 
 ```bash
 npm install
+```
+
+### 4. Jalankan aplikasi
+
+```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173`.
+### 5. Buka browser
 
-## Supabase Configuration (Optional)
-
-For production mode, copy `.env.example` to `.env` and fill in your Supabase project credentials:
-
-```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
+```text
+http://localhost:5173
 ```
 
-- With Supabase configured: students, books, and reading activities are stored in Supabase PostgreSQL tables.
-- Without Supabase: the app runs in prototype mode using localStorage as fallback.
-- Authentication remains localStorage-based (dummy session, no Supabase Auth).
+---
 
-## Dummy Login
+## 🌐 URL Aplikasi yang Telah Di-deploy
 
-| Username | Password | Role |
-|----------|----------|------|
-| `petugas` | `literasi123` | Petugas Perpustakaan |
+https://literasi-sd-wirosaban-app.vercel.app/
 
-## Routes
+---
 
-| Route | Page | Description |
-|---|---|---|
-| `/login` | Login | Login page for petugas |
-| `/beranda` | Beranda Pengguna | Dashboard with KPI stats, quick actions, recent activities |
-| `/siswa` | Data Siswa | Student data management with search |
-| `/catat-aktivitas` | Catat Aktivitas | Form to record reading activity |
-| `/buku` | Katalog Buku | Book catalog with search and category filter |
-| `/laporan` | Laporan Literasi | Literacy report with KPIs, chart, and print |
+## 📂 URL Repository GitHub
 
-## How to Test the Prototype
-
-### Demo Scenario 1: Dashboard
-1. Login with `petugas` / `literasi123`
-2. View KPI stats (Siswa Aktif, Buku Terbaca, Rata-rata Durasi)
-3. Click "Catat Aktivitas" quick action button
-4. Click "Tambah Siswa Baru" to navigate to student page
-
-### Demo Scenario 2: Data Siswa
-1. Navigate to Data Siswa via bottom navigation
-2. Search by student name or NIS
-3. Click "Lihat" to view student details
-4. Click "Edit" to modify student data
-5. Click floating + button to add new student
-
-### Demo Scenario 3: Catat Aktivitas
-1. Open via center plus button on bottom navigation
-2. Select a student and a book
-3. Pick a date and enter duration in minutes
-4. Toggle between "Masih Baca" and "Selesai"
-5. Click "Simpan Aktivitas"
-6. Verify activity appears on Beranda
-
-### Demo Scenario 4: Katalog Buku
-1. Navigate to Buku via bottom navigation
-2. Search by book title or author
-3. Filter by category chips (Fiksi, Sains, Sejarah)
-4. View "Paling Sering Dibaca" section
-5. Click floating + button to add new book
-
-### Demo Scenario 5: Laporan Literasi
-1. Navigate to Laporan via bottom navigation
-2. View KPI cards (Total Laporan, Total Durasi, Siswa Aktif, Koleksi Terbaca)
-3. View monthly bar chart
-4. View "Buku Terfavorit" card
-5. Click "Cetak Laporan" to trigger browser print dialog
-
-## Reset Data
-
-### Supabase (Production)
-To reset main data (students, books, activities), run in your Supabase SQL editor:
-
-```sql
-DELETE FROM reading_activities;
-DELETE FROM books;
-DELETE FROM students;
-```
-
-Refresh the page to re-seed with initial dummy data.
-
-### localStorage (Prototype / Fallback)
-To reset fallback data when Supabase is not configured:
-
-```javascript
-localStorage.clear();
-```
-
-Then refresh the page.
-
-Alternatively, remove specific keys:
-
-```javascript
-localStorage.removeItem('literasi_siswa');
-localStorage.removeItem('literasi_buku');
-localStorage.removeItem('literasi_aktivitas');
-localStorage.removeItem('literasi_auth');
-```
+https://github.com/novacalista/LiterasiSDWirosaban_App.git
